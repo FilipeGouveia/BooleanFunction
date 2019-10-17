@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <boost/dynamic_bitset.hpp>
 
 namespace BooleanFunction
 {
@@ -80,11 +81,16 @@ namespace BooleanFunction
     private:
 
         std::string outputVariable_;
-        std::map<int, std::set<std::string>> terms_;
+        std::map<int, std::set<std::string> > terms_;
         std::map<std::string,int> variableMap_;
         std::map<int, std::string> variableMapById_;
         int nTerms_;
         std::vector<int> level_;
+
+        std::set< boost::dynamic_bitset<> > convertToBitset();
+
+        Function * convertToFunction(std::set< boost::dynamic_bitset<> > bitset);
+
  
     };
     
@@ -92,7 +98,9 @@ namespace BooleanFunction
     std::string PrintFunction(Function *function);
 
     // returns a string representation of a function level
-    std::string PrintFunctionLevel(Function *function)
+    std::string PrintFunctionLevel(Function *function);
+
+    Function * ParseFunction(std::string functionText);
 
 
 }

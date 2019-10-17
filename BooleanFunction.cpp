@@ -1,4 +1,11 @@
 #include "BooleanFunction.h"
+#include "PowerSet.h"
+#include <string>
+#include <map>
+#include <set>
+#include <vector>
+#include <boost/dynamic_bitset.hpp>
+#include <sstream>
 
 namespace BooleanFunction
 {
@@ -11,7 +18,10 @@ namespace BooleanFunction
 
 
     // returns true if the <term> is present in <terms>
-    bool IsTermPresent(const std::set<std::string> term, const std::map<int, std::set<std::string>> terms);
+    bool IsTermPresent(const std::set<std::string> term, const std::map<int, std::set<std::string> > terms);
+
+    //splt string auxiliary function to parse networks
+    std::vector<std::string> Split(const std::string &s, char delim);
 
     /***********************
      * 
@@ -69,7 +79,7 @@ namespace BooleanFunction
     }
 
     // returns a map with term identifier and the correspondent vector of variables
-    std::map<int, std::set<std::string>> Function::getTerms()
+    std::map<int, std::set<std::string> > Function::getTerms()
     {
         return terms_;
     }
@@ -128,7 +138,7 @@ namespace BooleanFunction
         if(nTerms_ != f->getNTerms() || outputVariable_.compare(f->getOutputVariable()) != 0)
             return false;
 
-        std::map<int, std::set<std::string>> otherTerms = f->getTerms();
+        std::map<int, std::set<std::string> > otherTerms = f->getTerms();
 
         for(int i = 1; i <= nTerms_; i++)
         {
@@ -198,10 +208,145 @@ namespace BooleanFunction
     }
 
     // returns a vector of parents of the function
-    std::vector<Function*> getParents();
+    std::vector<Function*> Function::getParents()
+    {
+        std::vector<Function*> result;
+
+        int dimension = getDimension();
+
+        if(dimension < 1)
+            return result;
+
+        BooleanFunction::PowerSet * power = new BooleanFunction::PowerSet(dimension);
+
+        std::set< boost::dynamic_bitset<> > bitSet = convertToBitset();
+
+
+        //Maximum Independent terms
+        std::set< boost::dynamic_bitset<> > setIndependent = power->getMaxIndependent(bitSet);
+
+        //rule1
+        for(auto it = setIndependent.begin(), end = setIndependent.end(); it != end; it++)
+        {
+            std::set< boost::dynamic_bitset<> > newBitset = bitSet;
+            newBitset.insert((*it));
+            Function * f = convertToFunction(newBitset);
+            result.push_back(f);
+        }
+
+
+        //rule2
+        std::set< boost::dynamic_bitset<> > termParents = power->getAllParents(bitSet);
+        termParents = power->filterContained(termParents, termParents, true);
+        
+        termParents = power->filterContained(termParents, setIndependent);
+
+        //rule 2 + 3 add one or two terms if one is not possible and eliminate dominated terms
+        for(auto it = termParents.begin(), end = termParents.end(); it != end; it++)
+        {
+            std::set< boost::dynamic_bitset<> > setCandidatesToAdd;
+            setCandidatesToAdd.insert((*it));
+            std::set< boost::dynamic_bitset<> > candidateFBitset = power->filterDominated(bitSet, setCandidatesToAdd);
+            candidateFBitset.insert((*it));
+            if(!power->isDegenerated(candidateFBitset))
+            {
+                //rule2
+                Function * f = convertToFunction(candidateFBitset);
+                result.push_back(f);
+            }
+            else
+            {
+                //rule3
+                for(auto it2 = std::next(it); it2 != end; it2++)
+                {
+                    std::set< boost::dynamic_bitset<> > setCandidatesToAdd2 = setCandidatesToAdd;
+                    setCandidatesToAdd2.insert((*it2));
+                    std::set< boost::dynamic_bitset<> > candidateFBitset2 = power->filterDominated(bitSet, setCandidatesToAdd2);
+                    candidateFBitset2.insert((*it));
+                    candidateFBitset2.insert((*it2));
+                    if(!power->isDegenerated(candidateFBitset2))
+                    {
+                        Function * f = convertToFunction(candidateFBitset2);
+                        result.push_back(f);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
 
     // returns a vector of children of the function
-    std::vector<Function*> getChildren();
+    std::vector<Function*> Function::getChildren()
+    {
+        std::vector<Function*> result;
+
+        return result;
+    }
+
+    std::set< boost::dynamic_bitset<> > Function::convertToBitset()
+    {
+        std::set< boost::dynamic_bitset<> > result;
+        int dimension = getDimension();
+
+        std::map< std::string , int > varMap = getVariableMap();
+
+        for(auto it = terms_.begin(), end = terms_.end(); it != end; it++)
+        {
+            std::set< std::string > term = it->second;
+
+            boost::dynamic_bitset<> bs(dimension, 0);
+
+            for(auto it2 = term.begin(), end2 = term.end(); it2 != end2; it2++)
+            {
+                auto id = varMap.find((*it2));
+                if(id != varMap.end())
+                {
+                    bs.set(id->second - 1);
+                }
+            }
+            if(bs.any())
+            {
+                result.insert(bs);
+            }
+
+        }
+
+        return result;
+
+    }
+
+    Function * Function::convertToFunction(std::set< boost::dynamic_bitset<> > bitset)
+    {
+
+        Function * result = new Function(outputVariable_);
+
+        std::map<int, std::string> varMap = getVariableMapById();
+
+        //id of the term in dnf form
+        int index = 1;
+
+        for(auto it = bitset.begin(), end = bitset.end(); it != end; it++)
+        {
+            boost::dynamic_bitset<> bs = (*it);
+            int dimension = bs.size();
+            for(int i = 0; i < dimension; i++)
+            {
+                if(bs.test(i))
+                {
+                    auto var = varMap.find(i+1);
+                    if(var != varMap.end())
+                    {
+                        result->addVariableToTerm(index, var->second);
+                    }
+                }
+            }
+            index++;
+        }
+        return result;
+
+    }
 
 
     // returns a string representation of a function function
@@ -232,7 +377,7 @@ namespace BooleanFunction
         {
             result += "Empty Function";
         }
-        std::map<int, std::set<std::string>> terms = function->getTerms();
+        std::map<int, std::set<std::string> > terms = function->getTerms();
         for(int i = 1; i <= function->getNTerms(); i++)
         {
             result += "(";
@@ -257,7 +402,7 @@ namespace BooleanFunction
     }
 
 
-    bool IsTermPresent(const std::set<std::string> term, const std::map<int, std::set<std::string>> terms)
+    bool IsTermPresent(const std::set<std::string> term, const std::map<int, std::set<std::string> > terms)
     {
         for(auto it = terms.begin(), end = terms.end(); it!=end; it++)
         {
@@ -284,4 +429,57 @@ namespace BooleanFunction
         return false;
     }
 
+    Function * ParseFunction(std::string functionText)
+    {
+        Function * f = new Function();
+
+        functionText.erase(std::remove_if(functionText.begin(),functionText.end(),isspace),functionText.end());
+
+        //compact format -> {{1,2},{3,4}}
+        // non compact format -> (( 1 && 2 ) || (3 && 4))
+        bool isCompactFormat = false;
+        if(functionText.find("{") != std::string::npos)
+            isCompactFormat = true;
+
+        if(functionText.length() < 3)
+            return f; //TODO or NULL
+
+        functionText = functionText.substr(1,functionText.length() - 2);
+
+        std::vector<std::string> terms = Split(functionText, isCompactFormat ? '{' : '(');
+
+        if(terms.size() < 2)
+            return f; //TODO or NULL
+
+        for(int i = 1; i < terms.size(); i++)
+        {
+            terms[i] = Split(terms[i], isCompactFormat ? '}' : ')')[0];
+
+            std::vector<std::string> vars = Split(terms[i], isCompactFormat ? ',' : '&');
+
+            for(int j = 0; j < vars.size(); j++)
+            {
+                if(vars[j].length()>0) //turn around for dounble &&
+                {
+                    f->addVariableToTerm(i, vars[j]);
+                }
+            }
+
+
+        }
+
+        return f;
+    }
+
+    std::vector<std::string> Split(const std::string &s, char delim)
+    {
+        std::vector<std::string> elems;
+        std::stringstream ss;
+        ss.str(s);
+        std::string item;
+        while (std::getline(ss, item, delim)) {
+            elems.push_back(item);
+        }
+        return elems;
+    }
 }
