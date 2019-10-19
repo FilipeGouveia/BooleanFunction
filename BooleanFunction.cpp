@@ -282,6 +282,84 @@ namespace BooleanFunction
     {
         std::vector<Function*> result;
 
+        int dimension = getDimension();
+
+        if(dimension < 1)
+            return result;
+
+        BooleanFunction::PowerSet * power = new BooleanFunction::PowerSet(dimension);
+
+        std::set< boost::dynamic_bitset<> > bitSet = convertToBitset();
+
+        //vector of terms that do not respect rule 1 or rule 2 of computing children
+        std::vector< boost::dynamic_bitset<> > termsNotR1R2;
+
+        for(auto it = bitSet.begin(), end = bitSet.end(); it != end; it++)
+        {
+            std::set< boost::dynamic_bitset<> > candBitSet = bitSet;
+            // S \ {c}
+            candBitSet.erase((*it));
+
+            //set of terms independent of S \ {c}
+            std::set< boost::dynamic_bitset<> > setIndependents = power->getIndependent(candBitSet);
+
+            std::set<  boost::dynamic_bitset<> > c;
+            c.insert((*it));
+            
+            //filter independents not dominated by c
+            setIndependents = power->filterNonDominated(setIndependents, c, true);
+
+            //rule 1
+            if(setIndependents.empty())
+            {
+                if(!power->isDegenerated(candBitSet))
+                {
+                    Function * f = convertToFunction(candBitSet);
+                    result.push_back(f);
+                }
+                else
+                {
+                    //candidate for rule 3
+                    termsNotR1R2.push_back((*it));
+
+                }
+            }
+            //rule 2
+            else
+            {
+                candBitSet.insert(setIndependents.begin(), setIndependents.end());
+                Function * f = convertToFunction(candBitSet);
+                result.push_back(f);
+
+            }
+
+        }
+
+        //rule 3
+        for(auto it1 = termsNotR1R2.begin(), end = termsNotR1R2.end(); it1 != end; it1++)
+        {
+            for(auto it2 = std::next(it1); it2 != end; it2++)
+            {
+
+                boost::dynamic_bitset<> intersectionBitSet = (*it1) & (*it2);
+                if(intersectionBitSet.any())
+                {
+                    std::set< boost::dynamic_bitset<> > candBitSet = bitSet;
+                    // S \ {c,c'}
+                    candBitSet.erase((*it1));
+                    candBitSet.erase((*it2));
+
+                    boost::dynamic_bitset<> unionBitSet = (*it1) | (*it2);
+                    candBitSet.insert(unionBitSet);
+
+                    Function * f = convertToFunction(candBitSet);
+                    result.push_back(f);
+
+                }
+
+            }
+        }
+
         return result;
     }
 

@@ -54,7 +54,7 @@ namespace BooleanFunction
             bool candidate = true;
             for(auto it2 = terms.begin(), end2= terms.end(); it2!=end2; it2++)
             {
-                //can be done with is_subset_of
+                //TODO can be done with is_subset_of
                 boost::dynamic_bitset<> bs = ((*it) & (*it2));
                 if((*it2).count() < (*it).count())
                 {
@@ -231,6 +231,21 @@ namespace BooleanFunction
 
         return result;
     }
+
+    std::set< boost::dynamic_bitset<> > PowerSet::filterNonDominated(std::set< boost::dynamic_bitset<> > setToFilter, std::set< boost::dynamic_bitset<> > setDominators, bool strictly)
+    {
+        std::set< boost::dynamic_bitset<> > result;
+
+        for(auto it = setToFilter.begin(), end = setToFilter.end(); it != end; it++)
+        {
+            if(isDominated((*it), setDominators, strictly))
+                result.insert((*it));
+        }
+
+        return result;
+    }
+
+
 
     bool PowerSet::isDegenerated(std::set< boost::dynamic_bitset<> > terms)
     {

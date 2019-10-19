@@ -153,6 +153,14 @@ int main(int argc, char ** argv)
             std::cout << "\n" << r << "\n";
         }
 
+        std::cout << "\nCalculating children of " << argv[1] << "\n";
+        std::vector<BooleanFunction::Function*> childrenff = ff->getChildren();
+        for(auto it = childrenff.begin(), end = childrenff.end(); it != end; it++)
+        {
+            std::string r = BooleanFunction::PrintFunction((*it));
+            std::cout << "\n" << r << "\n";
+        }
+
     }
 
 }

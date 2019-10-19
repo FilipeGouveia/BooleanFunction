@@ -30,7 +30,11 @@ namespace BooleanFunction
             std::set< boost::dynamic_bitset<> > filterContained(std::set< boost::dynamic_bitset<> > setTofilter, std::set< boost::dynamic_bitset<> > setToTest, bool strictly = false);
 
             bool isDominated(boost::dynamic_bitset<> term, std::set< boost::dynamic_bitset<> > setToTest, bool strictly = false);
+            //remove all the dominated terms
             std::set< boost::dynamic_bitset<> > filterDominated(std::set< boost::dynamic_bitset<> > setTofilter, std::set< boost::dynamic_bitset<> > setToTest, bool strictly = false);
+
+            //remove all the non dominated terms
+            std::set< boost::dynamic_bitset<> > filterNonDominated(std::set< boost::dynamic_bitset<> > setTofilter, std::set< boost::dynamic_bitset<> > setDominators, bool strictly = false);
 
 
             std::set< boost::dynamic_bitset<> > getParents(boost::dynamic_bitset<> term);
