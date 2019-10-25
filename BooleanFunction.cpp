@@ -306,6 +306,9 @@ namespace BooleanFunction
             std::set<  boost::dynamic_bitset<> > c;
             c.insert((*it));
             
+            //TODO improve performance by doing the reverse
+            // take all the children of the term removed and check if the term is independent
+            //if it is add to the set of independents
             //filter independents not dominated by c
             setIndependents = power->filterNonDominated(setIndependents, c, true);
 
@@ -342,7 +345,8 @@ namespace BooleanFunction
             {
 
                 boost::dynamic_bitset<> intersectionBitSet = (*it1) & (*it2);
-                if(intersectionBitSet.any())
+                //bug??
+                if(true || intersectionBitSet.any())
                 {
                     std::set< boost::dynamic_bitset<> > candBitSet = bitSet;
                     // S \ {c,c'}

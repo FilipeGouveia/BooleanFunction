@@ -144,21 +144,31 @@ int main(int argc, char ** argv)
 
     if(argc > 1)
     {
-        std::cout << "\nCalculating parents of " << argv[1] << "\n";
-        BooleanFunction::Function * ff = BooleanFunction::ParseFunction(argv[1]);
-        std::vector<BooleanFunction::Function*> parentsff = ff->getParents();
-        for(auto it = parentsff.begin(), end = parentsff.end(); it != end; it++)
+        int idf = 1;
+        if(argc > 2)
         {
-            std::string r = BooleanFunction::PrintFunction((*it));
-            std::cout << "\n" << r << "\n";
+            idf = 2;
         }
-
-        std::cout << "\nCalculating children of " << argv[1] << "\n";
-        std::vector<BooleanFunction::Function*> childrenff = ff->getChildren();
-        for(auto it = childrenff.begin(), end = childrenff.end(); it != end; it++)
+        BooleanFunction::Function * ff = BooleanFunction::ParseFunction(argv[idf]);
+        if(idf == 1 || (idf == 2 && std::strcmp(argv[1],"p") == 0))
         {
-            std::string r = BooleanFunction::PrintFunction((*it));
-            std::cout << "\n" << r << "\n";
+            std::cout << "\nCalculating parents of " << argv[idf] << "\n";
+            std::vector<BooleanFunction::Function*> parentsff = ff->getParents();
+            for(auto it = parentsff.begin(), end = parentsff.end(); it != end; it++)
+            {
+                std::string r = BooleanFunction::PrintFunction((*it));
+                std::cout << "\n" << r << "\n";
+            }
+        }
+        if(idf == 1 || (idf == 2 && std::strcmp(argv[1],"c") == 0))
+        {
+            std::cout << "\nCalculating children of " << argv[idf] << "\n";
+            std::vector<BooleanFunction::Function*> childrenff = ff->getChildren();
+            for(auto it = childrenff.begin(), end = childrenff.end(); it != end; it++)
+            {
+                std::string r = BooleanFunction::PrintFunction((*it));
+                std::cout << "\n" << r << "\n";
+            }
         }
 
     }
