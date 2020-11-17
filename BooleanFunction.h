@@ -1,5 +1,5 @@
-#ifndef NETWORK_H_
-#define NETWORK_H_
+#ifndef BOOLEANFUNCTION_H_
+#define BOOLEANFUNCTION_H_
 
 #include <string>
 #include <map>

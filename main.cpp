@@ -7,6 +7,8 @@
 #include <iostream>
 #include <set>
 
+void test1();
+
 int main(int argc, char ** argv)
 {
     int dimension = 4;
@@ -141,6 +143,7 @@ int main(int argc, char ** argv)
     BooleanFunction::Function * s2 = BooleanFunction::ParseFunction(ss);
     std::cout << "\n" << BooleanFunction::PrintFunction(s2) << "\n";
 
+    test1();
 
     if(argc > 1)
     {
@@ -172,5 +175,50 @@ int main(int argc, char ** argv)
         }
 
     }
+
+}
+
+void test1()
+{
+    BooleanFunction::PowerSet * power = new BooleanFunction::PowerSet(4);
+    boost::dynamic_bitset<> _123(4);
+    _123[0] = 1;
+    _123[1] = 1;
+    _123[2] = 1;
+
+    std::set< boost::dynamic_bitset<> > res1 = power->getIndependent(_123);
+    //std::cout << "Termos independentes de 123\n";
+    std::set< boost::dynamic_bitset<> > expected1;
+    boost::dynamic_bitset<> a(4,8);
+    boost::dynamic_bitset<> b(4,9);
+    boost::dynamic_bitset<> c(4,10);
+    boost::dynamic_bitset<> d(4,11);
+    boost::dynamic_bitset<> e(4,12);
+    boost::dynamic_bitset<> f(4,13);
+    boost::dynamic_bitset<> g(4,14);
+    expected1.insert(a);
+    expected1.insert(b);
+    expected1.insert(c);
+    expected1.insert(d);
+    expected1.insert(e);
+    expected1.insert(f);
+    expected1.insert(g);
+    //for(auto it = res1.begin(), end = res1.end(); it != end; it++)
+    //{
+    //    std::cout << (*it) << "\n";
+    //}
+    if(res1 == expected1)
+    {
+        std::cout << "\t TEST 1: Passed.\n";
+    }
+    else
+    {
+        std::cout << "\t TEST 1: Failed.\n";
+    }
+
+}
+
+void test2()
+{
 
 }
