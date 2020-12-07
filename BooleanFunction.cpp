@@ -330,7 +330,28 @@ namespace BooleanFunction
             //rule 2
             else
             {
-                candBitSet.insert(setIndependents.begin(), setIndependents.end());
+                //get minimum
+                size_t min = dimension;
+                std::set< boost::dynamic_bitset<> > minimumIndependent;
+                for(auto it1 = setIndependents.begin(), end1 = setIndependents.end(); it1 != end1; it1++)
+                {
+                    size_t count = (*it1).count();
+                    if(count < min)
+                    {
+                        min = count;
+                        minimumIndependent.clear();
+                        minimumIndependent.insert((*it1));
+                    }
+                    else
+                    {
+                        if(count == min)
+                        {
+                            minimumIndependent.insert((*it1));
+                        }
+                    }
+                }
+
+                candBitSet.insert(minimumIndependent.begin(), minimumIndependent.end());
                 Function * f = convertToFunction(candBitSet);
                 result.push_back(f);
 
